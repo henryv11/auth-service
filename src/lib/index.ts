@@ -30,6 +30,40 @@ function getWhereBuilder<W extends TObject<TProperties>>(w: WhereSchema<W>) {
   };
 }
 
+function firstRow<T>(res: QueryResult<T>) {
+  switch (res.rowCount) {
+    case 1: {
+      return res.rows[0];
+    }
+    case 0: {
+      throw new errors.NotFound('[database query] - expected one row, got none');
+    }
+    default: {
+      throw new errors.InternalServerError('[database query] - expected one row, got ' + res.rowCount);
+    }
+  }
+}
+
+function maybeFirstRow<T>(res: QueryResult<T>) {
+  if (res.rowCount <= 1) {
+    return res.rows[0];
+  }
+  throw new errors.InternalServerError('[database query] - expected one row, got ' + res.rowCount);
+}
+
+function rowCount(res: QueryResult) {
+  return res.rowCount;
+}
+
+function allRows<T>(res: QueryResult<T>) {
+  return res.rows;
+}
+
+const orderDirection = {
+  ASC: sql`ASC`,
+  DESC: sql`DESC`,
+};
+
 export abstract class Repository<
   S extends TObject<TProperties>,
   W extends TObject<TProperties>,
@@ -45,37 +79,13 @@ export abstract class Repository<
   protected where: (filters: Static<W>, throwOnEmpty?: boolean) => WhereSqlObj;
 
   protected static sql = sql;
+  protected static orderDirection = orderDirection;
+  protected static firstRow = firstRow;
+  protected static maybeFirstRow = maybeFirstRow;
+  protected static rowCount = rowCount;
+  protected static allRows = allRows;
 
-  protected static firstRow<T>(res: QueryResult<T>) {
-    switch (res.rowCount) {
-      case 1: {
-        return res.rows[0];
-      }
-      case 0: {
-        throw new errors.NotFound('[database query] - expected one row, got none');
-      }
-      default: {
-        throw new errors.InternalServerError('[database query] - expected one row, got ' + res.rowCount);
-      }
-    }
-  }
-
-  protected static maybeFirstRow<T>(res: QueryResult<T>) {
-    if (res.rowCount <= 1) {
-      return res.rows[0];
-    }
-    throw new errors.InternalServerError('[database query] - expected one row, got ' + res.rowCount);
-  }
-
-  protected static rowCount(res: QueryResult) {
-    return res.rowCount;
-  }
-
-  protected static allRows<T>(res: QueryResult<T>) {
-    return res.rows;
-  }
-
-  constructor(schema: S, where: WhereSchema<W>) {
+  constructor(private schema: S, where: WhereSchema<W>) {
     if (!schema.column) {
       throw new TypeError(
         'Repository ' + this.constructor.name + ' provided with table schema with no "table" property',
@@ -92,15 +102,23 @@ export abstract class Repository<
     this.database = app.database;
     this.query = app.database.query;
   }
+
+  protected translateColumns<T>(obj: T) {
+    return Object.entries(obj).reduce((translatedColumnKeys, [column, value]) => {
+      translatedColumnKeys[this.schema.properties[column].column || column] = value;
+      return translatedColumnKeys;
+    }, <Record<string, T[keyof T]>>{});
+  }
 }
 
-export abstract class Service<R extends Repository<never, never, F>, F extends FastifyInstance = FastifyInstance>
+export abstract class Service<R extends Repository<any, any, F>, F extends FastifyInstance = FastifyInstance>
   implements Injectable<F>
 {
   protected log!: F['log'];
   protected domains!: F['domains'];
-  protected repository!: R;
   protected database!: F['database'];
+  protected errors!: F['errors'];
+  protected repository!: R;
 
   constructor() {
     //
@@ -110,6 +128,7 @@ export abstract class Service<R extends Repository<never, never, F>, F extends F
     this.database = app.database;
     this.log = app.log.child({ service: this.constructor.name });
     this.domains = app.domains;
+    this.errors = app.errors;
   }
 
   setRepository(repository: R) {
@@ -119,7 +138,7 @@ export abstract class Service<R extends Repository<never, never, F>, F extends F
 
 export abstract class Domain<
   S extends Service<R, F>,
-  R extends Repository<never, never, F>,
+  R extends Repository<any, any, F>,
   F extends FastifyInstance = FastifyInstance,
 > implements Injectable<F>
 {

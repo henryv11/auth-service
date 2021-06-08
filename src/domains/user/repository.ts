@@ -1,9 +1,9 @@
-import { CreateUser, filterUser, FilterUser, UpdateUser, User, user } from './schemas';
+import { CreateUser, filterUser, FilterUser, PublicUser, publicUser, UpdateUser, User, user } from './schemas';
 import { Repository as R } from '../../lib';
 
-export default class UserRepository extends R<typeof user, typeof filterUser> {
+export default class UserRepository extends R<typeof publicUser, typeof filterUser> {
   constructor() {
-    super(user, {
+    super(publicUser, {
       id: (id, where) => where.and`id = ${id}`,
       username: (username, where) => where.and`username = ${username}`,
       password: (password, where) => where.and`password = ${password}`,
@@ -11,20 +11,17 @@ export default class UserRepository extends R<typeof user, typeof filterUser> {
   }
 
   create(user: CreateUser, conn = this.query) {
-    return conn<User>(
+    return conn<PublicUser>(
       R.sql`INSERT INTO ${this.table} (username, password)
               VALUES (${user.username}, ${user.password})
               RETURNING ${this.columns}`,
     ).then(R.firstRow);
   }
 
-  update({ username, password }: UpdateUser, filter: FilterUser, conn = this.query) {
-    return conn<User>(
+  update(update: UpdateUser, filter: FilterUser, conn = this.query) {
+    return conn<PublicUser>(
       R.sql`UPDATE ${this.table}
-              ${R.sql.set({
-                username,
-                password,
-              })}
+              ${R.sql.set(this.translateColumns(update))}
               ${this.where(filter)}
               RETURNING ${this.columns}`,
     ).then(R.firstRow);

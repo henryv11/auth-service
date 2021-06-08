@@ -19,6 +19,10 @@ export const user = Type.Object(
   },
 );
 
+export const publicUser = Type.Omit(user, ['password']);
+
+export type PublicUser = Static<typeof publicUser>;
+
 export type User = Static<typeof user>;
 
 export const createUser = Type.Pick(user, ['username', 'password']);
