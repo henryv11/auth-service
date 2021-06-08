@@ -1,0 +1,28 @@
+{
+  "port": 8080,
+  "host": "0.0.0.0",
+  "name": "auth",
+  "database": {
+    "host": "postgres_container",
+    "port": 5432,
+    "user": "postgres",
+    "password": "postgres",
+    "migrationsDirectory": "./migrations"
+  },
+  "swagger": {
+    "routePrefix": "/documentation",
+    "exposeRoute": true,
+    "swagger": {
+      "info": {
+        "title": "Auth API",
+        "description": "Auth service",
+        "version": "1.0.0"
+      },
+      "consumes": ["application/json"],
+      "produces": ["application/json"]
+    }
+  },
+  "logger": {
+    "prettyPrint": true
+  }
+}
