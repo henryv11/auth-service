@@ -79,7 +79,7 @@ export function Keys<T extends TObject<TProperties>>(schema: T) {
   return <(keyof T['properties'])[]>Object.keys(schema.properties);
 }
 
-export function columnTranslationBuilder<T extends Record<string, string>>(obj: T) {
+export function columnMaskBuilder<T extends Record<string, string>>(obj: T) {
   const translations = {
     ...obj,
     ...invert(obj),

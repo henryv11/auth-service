@@ -3,7 +3,7 @@ import { FastifyInstance } from 'fastify';
 import * as dbUtil from '../../lib';
 import { CreateUser, FilterUser, ListUser, PublicUser, UpdateUser } from './schemas';
 
-const translate = dbUtil.columnTranslationBuilder({ created_at: 'createdAt', updated_at: 'updatedAt' });
+const columnMask = dbUtil.columnMaskBuilder({ created_at: 'createdAt', updated_at: 'updatedAt' });
 
 const where = dbUtil.whereBuilder<FilterUser>({
   id: (id, where) => where.and`id = ${id}`,
@@ -16,8 +16,8 @@ const table = sql.identifier('app_user');
 const columns = sql.columns([
   'id',
   'username',
-  ['created_at', translate('created_at')],
-  ['updated_at', translate('updated_at')],
+  ['created_at', columnMask('created_at')],
+  ['updated_at', columnMask('updated_at')],
 ]);
 
 export function userRepository(app: FastifyInstance) {
@@ -71,7 +71,7 @@ export function userRepository(app: FastifyInstance) {
         sql`SELECT ${sql.columns([columns, sql`COUNT(*) OVER AS "totalRows"`])}
             FROM ${table}
             ${where(filters, false)}
-            ORDER BY ${sql.identifier(translate(orderBy))} ${dbUtil.orderDirection[orderDirection]}
+            ORDER BY ${sql.identifier(columnMask(orderBy))} ${dbUtil.orderDirection[orderDirection]}
             LIMIT ${limit} OFFSET ${offset}`,
       ).then(dbUtil.allRows);
     },
