@@ -1,16 +1,19 @@
-import UserDomain from './user';
+import { userDomain } from './user';
 import fp from 'fastify-plugin';
-import SessionDomain from './session';
+import { FastifyInstance } from 'fastify';
 
-const domains = Object.freeze({ user: new UserDomain(), session: new SessionDomain() });
+function getDomains(app: FastifyInstance) {
+  return {
+    user: userDomain(app),
+  };
+}
 
 export default fp(async app => {
-  app.decorate('domains', domains);
-  Object.values(app.domains).forEach(domain => domain.inject(app));
+  app.decorate('domains', getDomains(app));
 });
 
 declare module 'fastify' {
   interface FastifyInstance {
-    domains: typeof domains;
+    domains: ReturnType<typeof getDomains>;
   }
 }

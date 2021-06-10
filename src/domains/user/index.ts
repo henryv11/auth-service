@@ -1,19 +1,17 @@
 import { FastifyInstance } from 'fastify';
-import { Domain } from '../../lib';
-import registerUserControllers from './controller';
-import UserRepository from './repository';
+import { userController } from './controller';
+import { userRepository } from './repository';
 import * as schemas from './schemas';
-import UserService from './service';
+import { userService } from './service';
 
 export { schemas };
 
-export default class UserDomain extends Domain<UserService, UserRepository> {
-  constructor() {
-    super(new UserService(), new UserRepository());
-  }
-
-  inject(app: FastifyInstance) {
-    super.inject(app);
-    registerUserControllers(app);
-  }
+export function userDomain(app: FastifyInstance) {
+  const repository = userRepository(app);
+  const service = userService(app, repository);
+  userController(app, service, repository);
+  return {
+    service,
+    repository,
+  };
 }

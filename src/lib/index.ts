@@ -1,28 +1,21 @@
-import { QueryResult } from '@heviir/fastify-pg';
 import errors from '@heviir/http-errors';
-import sql, { ColumnsSqlObject, IdentifierSqlObj, WhereSqlObj } from '@heviir/pg-template-string';
-import { Static, TObject, TProperties } from '@sinclair/typebox';
-import { FastifyInstance } from 'fastify';
+import sql, { WhereSqlObj } from '@heviir/pg-template-string';
+import { TObject, TProperties, Type } from '@sinclair/typebox';
+import { QueryResult } from 'pg';
 
-function getTableInfo<S extends TObject<P>, P extends TProperties = S['properties']>(schema: S) {
-  const columns = Object.entries(schema.properties).reduce<[string, string][]>(
-    (acc, [k, { column = k }]) => (acc.push([k, column]), acc),
-    [],
-  );
-  return {
-    table: sql.identifier(schema.table),
-    columns: sql.columns(columns.map(([a, b]) => (a === b ? a : [b, a]))),
-    columnMap: columns.reduce(
-      (map, [key, value]) => ((map[<keyof P>key] = sql.identifier(value)), map),
-      <Record<keyof P, ReturnType<typeof sql.identifier>>>{},
-    ),
-  };
-}
-
-function getWhereBuilder<W extends TObject<TProperties>>(w: WhereSchema<W>) {
-  return (filters: Static<W>, throwOnEmpty = true) => {
+export function whereBuilder<W extends Record<string, W[keyof W]>>(
+  whereSchema: {
+    [Key in keyof W]: (value: Exclude<W[Key], undefined>, where: WhereSqlObj) => void;
+  },
+) {
+  return (filters: W, throwOnEmpty = true) => {
     const where = sql.where();
-    Object.entries(filters).forEach(([key, value]) => value !== undefined && w[key]?.(value, where));
+    for (const key of Object.keys(filters)) {
+      if (filters[key] === undefined) {
+        continue;
+      }
+      whereSchema[<keyof W>key]?.(<Exclude<W[keyof W], undefined>>filters[key], where);
+    }
     if (throwOnEmpty && where.isEmpty) {
       throw new errors.Forbidden();
     }
@@ -30,134 +23,82 @@ function getWhereBuilder<W extends TObject<TProperties>>(w: WhereSchema<W>) {
   };
 }
 
-function firstRow<T>(res: QueryResult<T>) {
+export function firstRow<T>(res: QueryResult<T>) {
   switch (res.rowCount) {
     case 1: {
       return res.rows[0];
     }
     case 0: {
-      throw new errors.NotFound('[database query] - expected one row, got none');
+      throw new errors.NotFound('expected one row, got none');
     }
     default: {
-      throw new errors.InternalServerError('[database query] - expected one row, got ' + res.rowCount);
+      throw new errors.InternalServerError('expected one row, got ' + res.rowCount);
     }
   }
 }
 
-function maybeFirstRow<T>(res: QueryResult<T>) {
+export function maybeFirstRow<T>(res: QueryResult<T>) {
   if (res.rowCount <= 1) {
     return res.rows[0];
   }
-  throw new errors.InternalServerError('[database query] - expected one row, got ' + res.rowCount);
+  throw new errors.InternalServerError('expected one row, got ' + res.rowCount);
 }
 
-function rowCount(res: QueryResult) {
+export function rowCount(res: QueryResult) {
   return res.rowCount;
 }
 
-function allRows<T>(res: QueryResult<T>) {
+export function allRows<T>(res: QueryResult<T>) {
   return res.rows;
 }
 
-const orderDirection = {
-  ASC: sql`ASC`,
-  DESC: sql`DESC`,
+export enum OrderDirection {
+  ASCENDING = 'ASC',
+  DESCENDING = 'DESC',
+}
+
+export const orderDirection = {
+  [OrderDirection.ASCENDING]: sql`ASC`,
+  [OrderDirection.DESCENDING]: sql`DESC`,
 };
 
-export abstract class Repository<
-  S extends TObject<TProperties>,
-  W extends TObject<TProperties>,
-  F extends FastifyInstance = FastifyInstance,
-> implements Injectable<F>
-{
-  table: IdentifierSqlObj;
-  columns: ColumnsSqlObject;
-  columnMap: Record<keyof S['properties'], ReturnType<typeof sql.identifier>>;
+const listControlBase = {
+  limit: Type.Optional(Type.Number()),
+  offset: Type.Optional(Type.Number()),
+  orderDirection: Type.Optional(Type.Enum(OrderDirection)),
+} as const;
 
-  protected query!: F['database']['query'];
-  protected database!: F['database'];
-  protected where: (filters: Static<W>, throwOnEmpty?: boolean) => WhereSqlObj;
-
-  protected static sql = sql;
-  protected static orderDirection = orderDirection;
-  protected static firstRow = firstRow;
-  protected static maybeFirstRow = maybeFirstRow;
-  protected static rowCount = rowCount;
-  protected static allRows = allRows;
-
-  constructor(private schema: S, where: WhereSchema<W>) {
-    if (!schema.column) {
-      throw new TypeError(
-        'Repository ' + this.constructor.name + ' provided with table schema with no "table" property',
-      );
-    }
-    const tableInfo = getTableInfo(schema);
-    this.where = getWhereBuilder(where);
-    this.table = tableInfo.table;
-    this.columns = tableInfo.columns;
-    this.columnMap = tableInfo.columnMap;
-  }
-
-  inject(app: F) {
-    this.database = app.database;
-    this.query = app.database.query;
-  }
-
-  protected translateColumns<T>(obj: T) {
-    return Object.entries(obj).reduce((translatedColumnKeys, [column, value]) => {
-      translatedColumnKeys[this.schema.properties[column].column || column] = value;
-      return translatedColumnKeys;
-    }, <Record<string, T[keyof T]>>{});
-  }
+export function ListControl<T extends string>(orderByKeys: T[]) {
+  return Type.Object({
+    ...listControlBase,
+    orderBy: Type.Optional(Type.Union(orderByKeys.map(key => Type.Literal(key)))),
+  });
 }
 
-export abstract class Service<R extends Repository<any, any, F>, F extends FastifyInstance = FastifyInstance>
-  implements Injectable<F>
-{
-  protected log!: F['log'];
-  protected domains!: F['domains'];
-  protected database!: F['database'];
-  protected errors!: F['errors'];
-  protected repository!: R;
-
-  constructor() {
-    //
-  }
-
-  inject(app: F) {
-    this.database = app.database;
-    this.log = app.log.child({ service: this.constructor.name });
-    this.domains = app.domains;
-    this.errors = app.errors;
-  }
-
-  setRepository(repository: R) {
-    this.repository = repository;
-  }
+export function Keys<T extends TObject<TProperties>>(schema: T) {
+  return <(keyof T['properties'])[]>Object.keys(schema.properties);
 }
 
-export abstract class Domain<
-  S extends Service<R, F>,
-  R extends Repository<any, any, F>,
-  F extends FastifyInstance = FastifyInstance,
-> implements Injectable<F>
-{
-  constructor(public service: S, public repository: R) {}
-
-  inject(app: F) {
-    this.service.inject(app);
-    this.repository.inject(app);
-    this.service.setRepository(this.repository);
-  }
+export function columnTranslationBuilder<T extends Record<string, string>>(obj: T) {
+  const translations = {
+    ...obj,
+    ...invert(obj),
+  };
+  return (column: string): string => translations[column] ?? column;
 }
 
-type WhereSchema<WhereObject extends TObject<TProperties>> = {
-  [K in keyof WhereObject['properties']]: (
-    value: Exclude<Static<WhereObject[K]>, undefined>,
-    where: WhereSqlObj,
-  ) => void;
+function invert<T extends Record<PropertyKey, PropertyKey>>(obj: T) {
+  const inverted: Record<PropertyKey, PropertyKey> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    inverted[<string>value] = key;
+  }
+  return <Invert<T>>inverted;
+}
+
+type KeyFromValue<V, T extends Record<PropertyKey, PropertyKey>> = {
+  [K in keyof T]: V extends T[K] ? K : never;
+}[keyof T];
+
+type Invert<T extends Record<PropertyKey, PropertyKey>> = {
+  [V in T[keyof T]]: KeyFromValue<V, T>;
 };
-
-interface Injectable<F extends FastifyInstance> {
-  inject(app: F): void;
-}

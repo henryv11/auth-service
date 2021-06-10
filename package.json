@@ -17,6 +17,7 @@
   "author": "h.viirmae@gmail.com",
   "license": "MIT",
   "devDependencies": {
+    "@types/bcrypt": "^5.0.0",
     "@types/config": "0.0.38",
     "@types/jest": "^26.0.22",
     "@types/pino": "^6.3.8",
@@ -40,9 +41,12 @@
     "@heviir/http-errors": "^1.0.3",
     "@heviir/pg-template-string": "^1.0.4",
     "@sinclair/typebox": "^0.16.7",
+    "@types/pg": "^8.6.0",
+    "bcrypt": "^5.0.1",
     "config": "^3.3.6",
     "fastify": "^3.17.0",
     "fastify-swagger": "^4.7.0",
+    "pg": "^8.6.0",
     "pino": "^6.11.3",
     "pino-pretty": "^5.0.2"
   }
