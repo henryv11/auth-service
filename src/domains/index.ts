@@ -1,9 +1,17 @@
-import { userDomain } from './user';
-import fp from 'fastify-plugin';
 import { FastifyInstance } from 'fastify';
+import fp from 'fastify-plugin';
+import { authDomain } from './auth';
+import { resourceDomain } from './resource';
+import { roleDomain } from './role';
+import { sessionDomain } from './session';
+import { userDomain } from './user';
 
 function getDomains(app: FastifyInstance) {
   return {
+    auth: authDomain(app),
+    resource: resourceDomain(app),
+    role: roleDomain(app),
+    session: sessionDomain(app),
     user: userDomain(app),
   };
 }

@@ -44,7 +44,7 @@ export function maybeFirstRow<T>(res: QueryResult<T>) {
   throw new errors.InternalServerError('expected one row, got ' + res.rowCount);
 }
 
-export function rowCount(res: QueryResult) {
+export function rowCount<T>(res: QueryResult<T>) {
   return res.rowCount;
 }
 
@@ -60,6 +60,66 @@ export enum OrderDirection {
 export const orderDirection = {
   [OrderDirection.ASCENDING]: sql`ASC`,
   [OrderDirection.DESCENDING]: sql`DESC`,
+};
+
+export function columnAliasBuilder<T extends Record<string, string>>(aliasMap: T) {
+  const translations = {
+    ...aliasMap,
+    ...invert(aliasMap),
+  };
+  return (column: string): string => translations[column] ?? column;
+}
+
+function invert<T extends Record<PropertyKey, PropertyKey>>(obj: T) {
+  const inverted: Record<PropertyKey, PropertyKey> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    inverted[<string>value] = key;
+  }
+  return <Invert<T>>inverted;
+}
+
+export function aliasColumns(columns: string[], columnMask: (col: string) => string) {
+  return columns.map<string | [string, string]>(column => {
+    const mask = columnMask(column);
+    if (mask === column) {
+      return column;
+    }
+    return [column, mask];
+  });
+}
+
+type KeyFromValue<V, T extends Record<PropertyKey, PropertyKey>> = {
+  [K in keyof T]: V extends T[K] ? K : never;
+}[keyof T];
+
+type Invert<T extends Record<PropertyKey, PropertyKey>> = {
+  [V in T[keyof T]]: KeyFromValue<V, T>;
+};
+
+export function getCamelCasedColumnAliasMap(keys: string[]) {
+  return keys.reduce<Record<string, string>>((aliasMap, key) => {
+    aliasMap[key] = toCamelCase(key);
+    return aliasMap;
+  }, {});
+}
+
+function toCamelCase(str: string) {
+  return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, function (match, index) {
+    if (+match === 0) return '';
+    return index === 0 ? match.toLowerCase() : match.toUpperCase();
+  });
+}
+
+export const dbUtil = {
+  OrderDirection,
+  allRows,
+  columnAliasBuilder,
+  firstRow,
+  aliasColumns,
+  maybeFirstRow,
+  rowCount,
+  whereBuilder,
+  getCamelCasedColumnAliasMap,
 };
 
 const listControlBase = {
@@ -79,26 +139,7 @@ export function Keys<T extends TObject<TProperties>>(schema: T) {
   return <(keyof T['properties'])[]>Object.keys(schema.properties);
 }
 
-export function columnMaskBuilder<T extends Record<string, string>>(obj: T) {
-  const translations = {
-    ...obj,
-    ...invert(obj),
-  };
-  return (column: string): string => translations[column] ?? column;
-}
-
-function invert<T extends Record<PropertyKey, PropertyKey>>(obj: T) {
-  const inverted: Record<PropertyKey, PropertyKey> = {};
-  for (const [key, value] of Object.entries(obj)) {
-    inverted[<string>value] = key;
-  }
-  return <Invert<T>>inverted;
-}
-
-type KeyFromValue<V, T extends Record<PropertyKey, PropertyKey>> = {
-  [K in keyof T]: V extends T[K] ? K : never;
-}[keyof T];
-
-type Invert<T extends Record<PropertyKey, PropertyKey>> = {
-  [V in T[keyof T]]: KeyFromValue<V, T>;
+export const typeUtil = {
+  ListControl,
+  Keys,
 };

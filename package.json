@@ -6,7 +6,8 @@
   "scripts": {
     "test": "jest",
     "build": "tsc",
-    "dev": "nodemon"
+    "dev": "nodemon",
+    "create-domain": "node ./scripts/create-domain.js"
   },
   "files": [
     "dist/*"

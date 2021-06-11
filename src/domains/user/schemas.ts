@@ -1,18 +1,12 @@
 import { Type, Static } from '@sinclair/typebox';
 import { Keys, ListControl } from '../../lib';
 
-const id = Type.Number();
-const username = Type.String();
-const password = Type.String();
-const createdAt = Type.String({ format: 'date-time' });
-const updatedAt = Type.String({ format: 'date-time' });
-
 export const user = Type.Object({
-  id,
-  username,
-  password,
-  createdAt,
-  updatedAt,
+  id: Type.Number(),
+  username: Type.String(),
+  password: Type.String(),
+  createdAt: Type.String({ format: 'date-time' }),
+  updatedAt: Type.String({ format: 'date-time' }),
 });
 
 export const publicUser = Type.Omit(user, ['password']);

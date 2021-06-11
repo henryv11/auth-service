@@ -1,9 +1,11 @@
 import sql from '@heviir/pg-template-string';
 import { FastifyInstance } from 'fastify';
 import * as dbUtil from '../../lib';
-import { CreateUser, FilterUser, ListUser, PublicUser, UpdateUser } from './schemas';
+import { CreateUser, FilterUser, ListUser, PublicUser, publicUser, UpdateUser } from './schemas';
 
-const columnMask = dbUtil.columnMaskBuilder({ created_at: 'createdAt', updated_at: 'updatedAt' });
+const schemaKeys = Object.keys(publicUser.properties);
+
+const columnAlias = dbUtil.columnAliasBuilder(dbUtil.getCamelCasedColumnAliasMap(schemaKeys));
 
 const where = dbUtil.whereBuilder<FilterUser>({
   id: (id, where) => where.and`id = ${id}`,
@@ -13,12 +15,7 @@ const where = dbUtil.whereBuilder<FilterUser>({
 
 const table = sql.identifier('app_user');
 
-const columns = sql.columns([
-  'id',
-  'username',
-  ['created_at', columnMask('created_at')],
-  ['updated_at', columnMask('updated_at')],
-]);
+const columns = sql.columns(dbUtil.aliasColumns(schemaKeys, columnAlias));
 
 export function userRepository(app: FastifyInstance) {
   return {
@@ -71,7 +68,7 @@ export function userRepository(app: FastifyInstance) {
         sql`SELECT ${sql.columns([columns, sql`COUNT(*) OVER AS "totalRows"`])}
             FROM ${table}
             ${where(filters, false)}
-            ORDER BY ${sql.identifier(columnMask(orderBy))} ${dbUtil.orderDirection[orderDirection]}
+            ORDER BY ${sql.identifier(columnAlias(orderBy))} ${dbUtil.orderDirection[orderDirection]}
             LIMIT ${limit} OFFSET ${offset}`,
       ).then(dbUtil.allRows);
     },
