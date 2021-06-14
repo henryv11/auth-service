@@ -1,7 +1,9 @@
 #!/usr/bin/node
+/* eslint-disable @typescript-eslint/no-var-requires */
 
 const fs = require('fs');
 const pathUtil = require('path');
+const child = require('child_process');
 
 const name = process.argv[2];
 
@@ -9,7 +11,13 @@ if (!name) {
   throw new TypeError('missing name argument');
 }
 
-const dirPath = pathUtil.join('src', 'domains', name);
+const nameKebabCase = name
+  .replace(/\W+/g, ' ')
+  .split(/ |\B(?=[A-Z])/)
+  .map(word => word.toLowerCase())
+  .join('-');
+
+const dirPath = pathUtil.join('src', 'domains', nameKebabCase);
 
 if (fs.existsSync(dirPath)) {
   throw new TypeError('domain with name ' + name + ' already exists');
@@ -19,34 +27,48 @@ fs.mkdirSync(dirPath);
 
 console.log('created directory ' + dirPath);
 
-const nameCap = name.charAt(0).toUpperCase() + name.slice(1);
+const nameCapitalized = name.charAt(0).toUpperCase() + name.slice(1);
+const nameSnakeCase = name
+  .replace(/\W+/g, ' ')
+  .split(/ |\B(?=[A-Z])/)
+  .map(word => word.toLowerCase())
+  .join('_');
 
 const schemas = `
 import { Static, Type } from '@sinclair/typebox';
 import { typeUtil } from '../../lib';
 
-export const ${name} = Type.Object({});
+export const ${name} = Type.Object({
+   // TODO: define properties for "${nameSnakeCase}" table
+});
 
-export type ${nameCap} = Static<typeof ${name}>;
+export type ${nameCapitalized} = Static<typeof ${name}>;
 
-export const create${nameCap} = Type.Pick(${name}, []);
+export const create${nameCapitalized} = Type.Pick(${name}, [
+  // TODO: pick properties for creating entries in "${nameSnakeCase}" table
+]);
 
-export type Create${nameCap} = Static<typeof create${nameCap}>;
+export type Create${nameCapitalized} = Static<typeof create${nameCapitalized}>;
 
-export const filter${nameCap} = Type.Partial(Type.Pick(${name}, []));
+export const filter${nameCapitalized} = Type.Partial(Type.Pick(${name}, [
+    // TODO: pick properties for filtering "${nameSnakeCase}" table
+]));
 
-export type Filter${nameCap} = Static<typeof filter${nameCap}>;
+export type Filter${nameCapitalized} = Static<typeof filter${nameCapitalized}>;
 
-export const update${nameCap} = Type.Partial(Type.Pick(${name}, []));
+export const update${nameCapitalized} = Type.Partial(Type.Pick(${name}, [
+    // TODO: pick properties for updating "${nameSnakeCase}" table
+]));
 
-export type Update${nameCap} = Static<typeof update${nameCap}>;
+export type Update${nameCapitalized} = Static<typeof update${nameCapitalized}>;
 
-export const list${nameCap} = Type.Intersect([filter${nameCap}, typeUtil.ListControl(typeUtil.Keys(${name}))]);
+export const list${nameCapitalized} = Type.Intersect([filter${nameCapitalized}, typeUtil.ListControl(typeUtil.Keys(${name}))]);
 
-export type List${nameCap} = Static<typeof list${nameCap}>;
+export type List${nameCapitalized} = Static<typeof list${nameCapitalized}>;
 `;
 
 const controller = `
+/* eslint-disable @typescript-eslint/no-unused-vars */ // TODO: remove this
 import { FastifyInstance } from 'fastify';
 import { ${name}Repository } from './repository';
 import { ${name}Service } from './service';
@@ -61,20 +83,17 @@ export function ${name}Controller(
 `;
 
 const repository = `
+/* eslint-disable @typescript-eslint/no-unused-vars */ // TODO: remove this
 import sql from '@heviir/pg-template-string';
 import { FastifyInstance } from 'fastify';
 import { dbUtil } from '../../lib';
-import { ${name}, Filter${nameCap} } from './schemas';
+import { ${name}, Filter${nameCapitalized} } from './schemas';
 
-const schemaKeys = Object.keys(${name}.properties);
+const where = dbUtil.whereBuilder<Filter${nameCapitalized}>({
+  // TODO: implement filters for "${nameSnakeCase}" table
+});
 
-const columnAlias = dbUtil.columnAliasBuilder(dbUtil.getCamelCasedColumnAliasMap(schemaKeys));
-
-const where = dbUtil.whereBuilder<Filter${nameCap}>({});
-
-const table = sql.identifier('${name}');
-
-const columns = sql.columns(dbUtil.aliasColumns(schemaKeys, columnAlias));
+const { table, columns, columnAlias } = dbUtil.getTableInfo('${nameSnakeCase}', Object.keys(${name}.properties));
 
 export function ${name}Repository(app: FastifyInstance) {
   return {
@@ -84,6 +103,7 @@ export function ${name}Repository(app: FastifyInstance) {
 `;
 
 const service = `
+/* eslint-disable @typescript-eslint/no-unused-vars */ // TODO: remove this
 import { FastifyInstance } from 'fastify';
 import { ${name}Repository } from './repository';
 
@@ -118,4 +138,10 @@ for (const filename of Object.keys(templateByFile)) {
   console.log('created template file ' + filename + '.ts in ' + dirPath);
 }
 
-console.log('domain created successfully');
+console.log('domain ' + name + ' created successfully');
+
+try {
+  child.execSync('prettier --write --config .prettierrc.js ' + dirPath);
+} catch (error) {
+  console.log('failed to format files', error);
+}

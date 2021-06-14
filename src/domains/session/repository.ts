@@ -1,11 +1,7 @@
 import sql from '@heviir/pg-template-string';
 import { FastifyInstance } from 'fastify';
 import { dbUtil } from '../../lib';
-import { session, FilterSession, CreateSession, Session } from './schemas';
-
-const schemaKeys = Object.keys(session.properties);
-
-const columnAlias = dbUtil.columnAliasBuilder(dbUtil.getCamelCasedColumnAliasMap(schemaKeys));
+import { session, FilterSession, CreateSession, Session, UpdateSession } from './schemas';
 
 const where = dbUtil.whereBuilder<FilterSession>({
   id: (id, where) => where.and`id = ${id}`,
@@ -13,9 +9,8 @@ const where = dbUtil.whereBuilder<FilterSession>({
   endedAt: (endedAt, where) => where.and`ended_at = ${endedAt}`,
 });
 
-const table = sql.identifier('session');
-
-const columns = sql.columns(dbUtil.aliasColumns(schemaKeys, columnAlias));
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const { table, columns, columnAlias } = dbUtil.getTableInfo('session', Object.keys(session.properties));
 
 export function sessionRepository(app: FastifyInstance) {
   return {
@@ -43,6 +38,28 @@ export function sessionRepository(app: FastifyInstance) {
             ${where(filters, false)}
             LIMIT 1`,
       ).then(dbUtil.maybeFirstRow);
+    },
+
+    update(update: UpdateSession, filters: FilterSession, conn = app.database.query) {
+      return conn<Session>(
+        sql`UPDATE ${table}
+          ${sql.set({
+            endedAt: update.endedAt,
+          })}
+          ${where(filters)}
+          RETURNING ${columns}`,
+      ).then(dbUtil.allRows);
+    },
+
+    updateOne(update: UpdateSession, filters: FilterSession, conn = app.database.query) {
+      return conn<Session>(
+        sql`UPDATE ${table}
+          ${sql.set({
+            endedAt: update.endedAt,
+          })}
+          ${where(filters)}
+          RETURNING ${columns}`,
+      ).then(dbUtil.firstRow);
     },
   };
 }

@@ -1,7 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { userRepository } from './repository';
 import { CreateUser } from './schemas';
-import { hash } from 'bcrypt';
 
 export function userService(app: FastifyInstance, repository: ReturnType<typeof userRepository>) {
   return {

@@ -1,11 +1,7 @@
 import sql from '@heviir/pg-template-string';
 import { FastifyInstance } from 'fastify';
-import * as dbUtil from '../../lib';
+import { dbUtil } from '../../lib';
 import { CreateUser, FilterUser, ListUser, PublicUser, publicUser, UpdateUser } from './schemas';
-
-const schemaKeys = Object.keys(publicUser.properties);
-
-const columnAlias = dbUtil.columnAliasBuilder(dbUtil.getCamelCasedColumnAliasMap(schemaKeys));
 
 const where = dbUtil.whereBuilder<FilterUser>({
   id: (id, where) => where.and`id = ${id}`,
@@ -13,9 +9,7 @@ const where = dbUtil.whereBuilder<FilterUser>({
   password: (password, where) => where.and`password = ${password}`,
 });
 
-const table = sql.identifier('app_user');
-
-const columns = sql.columns(dbUtil.aliasColumns(schemaKeys, columnAlias));
+const { table, columns, columnAlias } = dbUtil.getTableInfo('app_user', Object.keys(publicUser.properties));
 
 export function userRepository(app: FastifyInstance) {
   return {
@@ -65,7 +59,7 @@ export function userRepository(app: FastifyInstance) {
       conn = app.database.query,
     ) {
       return conn<PublicUser & { totalRows: number }>(
-        sql`SELECT ${sql.columns([columns, sql`COUNT(*) OVER AS "totalRows"`])}
+        sql`SELECT ${columns}, COUNT(*) OVER AS "totalRows"
             FROM ${table}
             ${where(filters, false)}
             ORDER BY ${sql.identifier(columnAlias(orderBy))} ${dbUtil.orderDirection[orderDirection]}

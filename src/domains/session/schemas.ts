@@ -9,11 +9,14 @@ export const session = Type.Object({
   createdAt: Type.String({ format: 'date-time' }),
   updatedAt: Type.String({ format: 'date-time' }),
   endedAt: Type.Union([Type.Null(), Type.String({ format: 'date-time' })]),
+  ip: Type.String(),
+  device: Type.String(),
+  browser: Type.String(),
 });
 
 export type Session = Static<typeof session>;
 
-export const createSession = Type.Pick(session, ['userId', 'token']);
+export const createSession = Type.Pick(session, ['userId', 'token', 'ip', 'device', 'browser']);
 
 export type CreateSession = Static<typeof createSession>;
 
@@ -28,3 +31,7 @@ export type UpdateSession = Static<typeof updateSession>;
 export const listSession = Type.Intersect([filterSession, typeUtil.ListControl(typeUtil.Keys(session))]);
 
 export type ListSession = Static<typeof listSession>;
+
+export const requestData = Type.Pick(session, ['ip', 'device', 'browser']);
+
+export type RequestData = Static<typeof requestData>;

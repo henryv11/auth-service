@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { FastifyInstance } from 'fastify';
 import { userRepository } from './repository';
 import { userService } from './service';

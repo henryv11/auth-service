@@ -5,6 +5,7 @@ import { resourceDomain } from './resource';
 import { roleDomain } from './role';
 import { sessionDomain } from './session';
 import { userDomain } from './user';
+import { userRoleDomain } from './user-role';
 
 function getDomains(app: FastifyInstance) {
   return {
@@ -13,6 +14,7 @@ function getDomains(app: FastifyInstance) {
     role: roleDomain(app),
     session: sessionDomain(app),
     user: userDomain(app),
+    userRole: userRoleDomain(app),
   };
 }
 

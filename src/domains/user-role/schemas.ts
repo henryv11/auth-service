@@ -10,6 +10,10 @@ export const userRole = Type.Object({
   updatedAt: Type.String({ format: 'date-time' }),
 });
 
+export const userRolePrimaryKey = Type.Pick(userRole, ['userId', 'roleId']);
+
+export type UserRolePrimaryKey = Static<typeof userRolePrimaryKey>;
+
 export type UserRole = Static<typeof userRole>;
 
 export const createUserRole = Type.Pick(userRole, ['userId', 'roleId']);

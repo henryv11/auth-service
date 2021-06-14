@@ -15,6 +15,7 @@ const readFileAsync = promisify(readFile);
 const app = Fastify({ logger: pino(config.get('logger')) });
 
 app.register(exitHandler);
+
 app.register(errors);
 app.register(database, { ...config.get<FastifyPgOptions>('database'), database: config.get('name') });
 app.register(auth, {
