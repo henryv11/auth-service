@@ -30,15 +30,15 @@ export function sessionService(app: FastifyInstance, repository: ReturnType<type
 
   async function validateSession(session: Session, data: RequestData) {
     if (session.ip !== data.ip) {
-      throw new app.errors.BadRequest();
+      throw new app.errors.BadRequest('ip not matching');
     }
 
     if (session.browser !== data.browser) {
-      throw new app.errors.BadRequest();
+      throw new app.errors.BadRequest('browser not matching');
     }
 
     if (session.device !== data.device) {
-      throw new app.errors.BadRequest();
+      throw new app.errors.BadRequest('device not matching');
     }
   }
 
@@ -83,6 +83,7 @@ export function sessionService(app: FastifyInstance, repository: ReturnType<type
         await endSession(existingSession.id);
         return await startSession(userId, data);
       }
+
       return await getUnexpiredSession(existingSession, data);
     },
 

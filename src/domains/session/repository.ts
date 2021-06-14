@@ -9,8 +9,9 @@ const where = dbUtil.whereBuilder<FilterSession>({
   endedAt: (endedAt, where) => where.and`ended_at = ${endedAt}`,
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const { table, columns, columnAlias } = dbUtil.getTableInfo('session', Object.keys(session.properties));
+export const sessionTableInfo = dbUtil.getTableInfo('session', Object.keys(session.properties));
+
+const { table, columns } = sessionTableInfo;
 
 export function sessionRepository(app: FastifyInstance) {
   return {
