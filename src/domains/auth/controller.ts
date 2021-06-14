@@ -50,7 +50,7 @@ export function authController(
 
   app.delete('/auth', { auth: true }, async req => {
     const token = ensureToken(req);
-    await service.logoutUser(Number(token.sub));
+    await service.logoutUser(<number>token.sub);
   });
 
   app.get('/auth', { auth: true, schema: { response: { '2xx': response } } }, async req => {
@@ -59,7 +59,7 @@ export function authController(
       throw new app.errors.BadRequest('session token missing in token payload');
     }
     const data = getRequestData(req);
-    const result = await service.refreshLoginSession(Number(token.sub), { ...data, token: token.session });
+    const result = await service.refreshLoginSession(<number>token.sub, { ...data, token: token.session });
     return { jwt: result.jwt, token: result.session.token, userId: result.user.id };
   });
 }

@@ -8,8 +8,9 @@ const where = dbUtil.whereBuilder<FilterUserRole>({
   roleId: (roleId, where) => where.and`role_id = ${roleId}`,
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const { table, columns, columnAlias } = dbUtil.getTableInfo('user_role', Object.keys(userRole.properties));
+export const userRoleTableInfo = dbUtil.getTableInfo('user_role', Object.keys(userRole.properties));
+
+const { table, columns, getColumn } = userRoleTableInfo;
 
 export function userRoleRepository(app: FastifyInstance) {
   return {
@@ -39,7 +40,7 @@ export function userRoleRepository(app: FastifyInstance) {
         sql`SELECT ${columns}, COUNT(*) OVER AS "totalRows"
             FROM ${table}
             ${where(filters)}
-            ORDER BY ${sql.identifier(columnAlias(orderBy))} ${dbUtil.orderDirection[orderDirection]}
+            ORDER BY ${getColumn(orderBy)} ${dbUtil.orderDirection[orderDirection]}
             LIMIT ${limit} OFFSET ${offset}`,
       ).then(dbUtil.allRows);
     },

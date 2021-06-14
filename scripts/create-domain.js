@@ -93,7 +93,9 @@ const where = dbUtil.whereBuilder<Filter${nameCapitalized}>({
   // TODO: implement filters for "${nameSnakeCase}" table
 });
 
-const { table, columns, columnAlias } = dbUtil.getTableInfo('${nameSnakeCase}', Object.keys(${name}.properties));
+export const ${name}TableInfo = dbUtil.getTableInfo('${nameSnakeCase}', Object.keys(${name}.properties));
+
+const { } = ${name}TableInfo;
 
 export function ${name}Repository(app: FastifyInstance) {
   return {
@@ -122,6 +124,8 @@ import { ${name}Repository } from './repository';
 import { ${name}Service } from './service';
 
 export * as ${name}Schemas from './schemas';
+
+export { ${name}TableInfo } from './repository';
 
 export function ${name}Domain(app: FastifyInstance) {
   const repository = ${name}Repository(app);

@@ -106,6 +106,7 @@ export function getTableInfo(table: string, columns: string[], getColumnAlias = 
     table: sql.identifier(table),
     columns: sql.columns(aliasColumns(columns, columnAlias)),
     columnAlias,
+    getColumn: (rawColumn: string) => sql.identifier(columnAlias(rawColumn)),
   };
 }
 
