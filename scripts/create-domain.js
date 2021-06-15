@@ -46,7 +46,7 @@ export type ${nameCapitalized} = Static<typeof ${name}>;
 
 export const ${name}Columns = typeUtil.Keys(${name});
 
-export type ${nameCapitalized}Columns = typeof ${name}Columns;
+export type ${nameCapitalized}Column = typeof ${name}Columns[number];
 
 export const create${nameCapitalized} = Type.Pick(${name}, [
   // TODO: pick properties for creating entries in "${nameSnakeCase}" table
@@ -74,13 +74,13 @@ export type List${nameCapitalized} = Static<typeof list${nameCapitalized}>;
 const controller = `
 /* eslint-disable @typescript-eslint/no-unused-vars */ // TODO: remove this
 import { FastifyInstance } from 'fastify';
-import { ${name}Repository } from './repository';
-import { ${name}Service } from './service';
+import { ${nameCapitalized}Repository } from './repository';
+import { ${nameCapitalized}Service } from './service';
 
 export function ${name}Controller(
   app: FastifyInstance,
-  service: ReturnType<typeof ${name}Service>,
-  repository: ReturnType<typeof ${name}Repository>,
+  service: ${nameCapitalized}Service,
+  repository: ${nameCapitalized}Repository,
 ) {
   // TODO: register ${name} controllers
 }
@@ -104,19 +104,23 @@ export function ${name}Repository(app: FastifyInstance) {
     // TODO: implement ${name} repository
   };
 }
+
+export type ${nameCapitalized}Repository = ReturnType<typeof ${name}Repository>;
 `;
 
 const service = `
 /* eslint-disable @typescript-eslint/no-unused-vars */ // TODO: remove this
 import { FastifyInstance } from 'fastify';
-import { ${name}Repository } from './repository';
+import { ${nameCapitalized}Repository } from './repository';
 
-export function ${name}Service(app: FastifyInstance, repository: ReturnType<typeof ${name}Repository>) {
+export function ${name}Service(app: FastifyInstance, repository: ${nameCapitalized}Repository) {
   const log = app.log.child({ service: ${name}Service.name });
   return {
     // TODO: implement ${name} service
   };
 }
+
+export type ${nameCapitalized}Service = ReturnType<typeof ${name}Service>;
 `;
 
 const index = `
@@ -149,5 +153,5 @@ console.log('domain ' + name + ' created successfully');
 try {
   child.execSync('prettier --write --config .prettierrc.js ' + dirPath);
 } catch (error) {
-  console.log('failed to format files', error);
+  console.log('formatting files failed', error);
 }

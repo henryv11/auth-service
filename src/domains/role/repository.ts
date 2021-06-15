@@ -48,3 +48,5 @@ export function roleRepository(app: FastifyInstance) {
     },
   };
 }
+
+export type RoleRepository = ReturnType<typeof roleRepository>;

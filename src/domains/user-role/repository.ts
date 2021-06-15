@@ -1,7 +1,7 @@
 import sql from '@heviir/pg-template-string';
 import { FastifyInstance } from 'fastify';
 import { dbUtil } from '../../lib';
-import { FilterUserRole, CreateUserRole, UserRole, ListUserRole, userRoleColumns } from './schemas';
+import { FilterUserRole, CreateUserRole, UserRole, ListUserRole, userRoleColumns, UserRoleColumn } from './schemas';
 
 const where = dbUtil.where<FilterUserRole>({
   userId: (userId, where) => where.and`user_id = ${userId}`,
@@ -27,7 +27,7 @@ export function userRoleRepository(app: FastifyInstance) {
       ).then(dbUtil.rowCount);
     },
 
-    list(
+    list<C extends UserRoleColumn = UserRoleColumn>(
       {
         orderBy = 'createdAt',
         orderDirection = dbUtil.OrderDirection.ASCENDING,
@@ -35,10 +35,11 @@ export function userRoleRepository(app: FastifyInstance) {
         offset = 0,
         ...filters
       }: ListUserRole,
+      columns?: C | C[],
       query = app.database.query,
     ) {
-      return query<UserRole & { totalRows: number }>(
-        sql`SELECT ${userRoleTable.columns()}, COUNT(*) OVER AS "totalRows"
+      return query<Pick<UserRole, C> & { totalRows: number }>(
+        sql`SELECT ${userRoleTable.columns(columns)}, COUNT(*) OVER AS "totalRows"
             FROM ${userRoleTable.name}
             ${where(filters, false)}
             ORDER BY ${userRoleTable.column(orderBy)} ${dbUtil.orderDirection[orderDirection]}
@@ -47,3 +48,5 @@ export function userRoleRepository(app: FastifyInstance) {
     },
   };
 }
+
+export type UserRoleRoleRepository = ReturnType<typeof userRoleRepository>;

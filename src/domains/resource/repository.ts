@@ -20,3 +20,5 @@ export function resourceRepository(app: FastifyInstance) {
     },
   };
 }
+
+export type ResourceRepository = ReturnType<typeof resourceRepository>;

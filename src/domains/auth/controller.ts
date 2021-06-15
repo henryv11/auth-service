@@ -1,15 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { FastifyInstance, FastifyRequest } from 'fastify';
-import { authRepository } from './repository';
 import { sessionSchemas } from '../session';
+import { AuthRepository } from './repository';
 import { Credentials, credentials, response, Response } from './schemas';
-import { authService } from './service';
+import { AuthService } from './service';
 
-export function authController(
-  app: FastifyInstance,
-  service: ReturnType<typeof authService>,
-  repository: ReturnType<typeof authRepository>,
-) {
+export function authController(app: FastifyInstance, service: AuthService, repository: AuthRepository) {
   function ensureToken(req: FastifyRequest) {
     if (!req.token) {
       throw new app.errors.InternalServerError(req.tokenError);

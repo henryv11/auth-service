@@ -1,13 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { FastifyInstance } from 'fastify';
-import { sessionRepository } from './repository';
-import { sessionService } from './service';
+import { SessionRepository } from './repository';
+import { SessionService } from './service';
 
-export function sessionController(
-  app: FastifyInstance,
-  service: ReturnType<typeof sessionService>,
-  repository: ReturnType<typeof sessionRepository>,
-) {
+export function sessionController(app: FastifyInstance, service: SessionService, repository: SessionRepository) {
   // TODO: register controllers
 
   app.get('/session', {}, async () => {

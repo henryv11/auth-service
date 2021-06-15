@@ -64,3 +64,5 @@ export function authService(app: FastifyInstance, repository: ReturnType<typeof 
     },
   };
 }
+
+export type AuthService = ReturnType<typeof authService>;

@@ -1,12 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */ // TODO: remove this
 import { FastifyInstance } from 'fastify';
-import { roleRepository } from './repository';
-import { roleService } from './service';
+import { RoleRepository } from './repository';
+import { RoleService } from './service';
 
-export function roleController(
-  app: FastifyInstance,
-  service: ReturnType<typeof roleService>,
-  repository: ReturnType<typeof roleRepository>,
-) {
+export function roleController(app: FastifyInstance, service: RoleService, repository: RoleRepository) {
   // TODO: register role controllers
 }

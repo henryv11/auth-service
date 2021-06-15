@@ -15,7 +15,7 @@ export type PublicUser = Static<typeof publicUser>;
 
 export const userColumns = typeUtil.Keys(publicUser);
 
-export type UserColumns = typeof userColumns;
+export type UserColumn = typeof userColumns[number];
 
 export type User = Static<typeof user>;
 

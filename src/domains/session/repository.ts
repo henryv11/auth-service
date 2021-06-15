@@ -40,7 +40,7 @@ export function sessionRepository(app: FastifyInstance) {
       conn = app.database.query,
     ) {
       return conn<Pick<Session, C>>(
-        sql`SELECT ${sessionTable.allColumns}
+        sql`SELECT ${sessionTable.columns(columns)}
             FROM ${sessionTable.name}
             ${where(filters, false)}
             LIMIT 1`,
@@ -52,7 +52,7 @@ export function sessionRepository(app: FastifyInstance) {
         sql`UPDATE ${sessionTable.name}
           ${sessionTable.set(update)}
           ${where(filters)}
-          RETURNING ${sessionTable.allColumns}`,
+          RETURNING ${sessionTable.columns()}`,
       ).then(dbUtil.allRows);
     },
 
@@ -61,8 +61,10 @@ export function sessionRepository(app: FastifyInstance) {
         sql`UPDATE ${sessionTable.name}
           ${sessionTable.set(update)}
           ${where(filters)}
-          RETURNING ${sessionTable.allColumns}`,
+          RETURNING ${sessionTable.columns()}`,
       ).then(dbUtil.firstRow);
     },
   };
 }
+
+export type SessionRepository = ReturnType<typeof sessionRepository>;

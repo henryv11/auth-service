@@ -24,3 +24,5 @@ export function userRoleService(app: FastifyInstance, repository: ReturnType<typ
     },
   };
 }
+
+export type UserRoleService = ReturnType<typeof userRoleService>;

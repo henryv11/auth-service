@@ -1,12 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { FastifyInstance } from 'fastify';
-import { resourceRepository } from './repository';
-import { resourceService } from './service';
+import { ResourceRepository } from './repository';
+import { ResourceService } from './service';
 
-export function resourceController(
-  app: FastifyInstance,
-  service: ReturnType<typeof resourceService>,
-  repository: ReturnType<typeof resourceRepository>,
-) {
+export function resourceController(app: FastifyInstance, service: ResourceService, repository: ResourceRepository) {
   // TODO: register controllers
 }

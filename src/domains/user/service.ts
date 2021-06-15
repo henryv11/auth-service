@@ -1,8 +1,8 @@
 import { FastifyInstance } from 'fastify';
-import { userRepository } from './repository';
+import { UserRepository } from './repository';
 import { CreateUser } from './schemas';
 
-export function userService(app: FastifyInstance, repository: ReturnType<typeof userRepository>) {
+export function userService(app: FastifyInstance, repository: UserRepository) {
   return {
     async createNewUser(user: CreateUser) {
       const createdUser = await repository.createOne(user);
@@ -10,3 +10,5 @@ export function userService(app: FastifyInstance, repository: ReturnType<typeof 
     },
   };
 }
+
+export type UserService = ReturnType<typeof userService>;

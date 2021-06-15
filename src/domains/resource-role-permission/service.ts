@@ -11,3 +11,5 @@ export function resourceRolePermissionService(
     // TODO: implement resourceRolePermission service
   };
 }
+
+export type ResourceRolePermissionService = ReturnType<typeof resourceRolePermissionService>;

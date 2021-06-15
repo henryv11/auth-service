@@ -12,7 +12,7 @@ export const userRole = Type.Object({
 
 export const userRoleColumns = typeUtil.Keys(userRole);
 
-export type UserRoleColumns = typeof userRoleColumns;
+export type UserRoleColumn = typeof userRoleColumns[number];
 
 export const userRolePrimaryKey = Type.Pick(userRole, ['userId', 'roleId']);
 

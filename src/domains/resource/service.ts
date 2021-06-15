@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { FastifyInstance } from 'fastify';
-import { resourceRepository } from './repository';
-import { CreateResource } from './schemas';
+import { ResourceRepository } from './repository';
 
-export function resourceService(app: FastifyInstance, repository: ReturnType<typeof resourceRepository>) {
+export function resourceService(app: FastifyInstance, repository: ResourceRepository) {
   const log = app.log.child({ service: resourceService.name });
   return {
     // TODO: implement service
   };
 }
+
+export type ResourceService = ReturnType<typeof resourceService>;

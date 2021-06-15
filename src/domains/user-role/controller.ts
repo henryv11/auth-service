@@ -1,12 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { FastifyInstance } from 'fastify';
-import { userRoleRepository } from './repository';
-import { userRoleService } from './service';
+import { UserRoleRoleRepository } from './repository';
+import { UserRoleService } from './service';
 
-export function userRoleController(
-  app: FastifyInstance,
-  service: ReturnType<typeof userRoleService>,
-  repository: ReturnType<typeof userRoleRepository>,
-) {
+export function userRoleController(app: FastifyInstance, service: UserRoleService, repository: UserRoleRoleRepository) {
   // TODO: register userRole controllers
 }

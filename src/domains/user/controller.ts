@@ -1,12 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { FastifyInstance } from 'fastify';
-import { userRepository } from './repository';
-import { userService } from './service';
+import { UserRepository } from './repository';
+import { UserService } from './service';
 
-export function userController(
-  app: FastifyInstance,
-  service: ReturnType<typeof userService>,
-  repository: ReturnType<typeof userRepository>,
-) {
+export function userController(app: FastifyInstance, service: UserService, repository: UserRepository) {
   // TODO: register user controller
 }

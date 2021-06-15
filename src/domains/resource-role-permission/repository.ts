@@ -15,3 +15,5 @@ export function resourceRolePermissionRepository(app: FastifyInstance) {
     // TODO: implement resourceRolePermission repository
   };
 }
+
+export type ResourceRolePermissionRepository = ReturnType<typeof resourceRolePermissionRepository>;

@@ -1,14 +1,14 @@
 import { FastifyInstance } from 'fastify';
-import { sessionRepository } from './repository';
+import { SessionRepository } from './repository';
 import { userSchemas } from '../user';
 import { RequestData, Session } from './schemas';
+import { randomBytes } from 'crypto';
 
-export function sessionService(app: FastifyInstance, repository: ReturnType<typeof sessionRepository>) {
+export function sessionService(app: FastifyInstance, repository: SessionRepository) {
   const log = app.log.child({ service: sessionService.name });
 
   function generateSessionToken() {
-    // TODO: better implementation for token generation
-    return Math.random().toString().split('.')[1];
+    return randomBytes(64).toString('utf-8');
   }
 
   function isExpired(session: Session) {
@@ -107,3 +107,5 @@ export function sessionService(app: FastifyInstance, repository: ReturnType<type
     },
   };
 }
+
+export type SessionService = ReturnType<typeof sessionService>;

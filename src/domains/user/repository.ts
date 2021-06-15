@@ -1,7 +1,7 @@
 import sql from '@heviir/pg-template-string';
 import { FastifyInstance } from 'fastify';
 import { dbUtil } from '../../lib';
-import { CreateUser, FilterUser, ListUser, PublicUser, publicUser, UpdateUser, userColumns } from './schemas';
+import { CreateUser, FilterUser, ListUser, PublicUser, UpdateUser, UserColumn, userColumns } from './schemas';
 
 const where = dbUtil.where<FilterUser>({
   id: (id, where) => where.and`id = ${id}`,
@@ -30,25 +30,25 @@ export function userRepository(app: FastifyInstance) {
       ).then(dbUtil.firstRow);
     },
 
-    findOne(filters: FilterUser, conn = app.database.query) {
-      return conn<PublicUser>(
-        sql`SELECT ${userTable.columns()}
+    findOne<C extends UserColumn = UserColumn>(filters: FilterUser, columns?: C | C[], conn = app.database.query) {
+      return conn<Pick<PublicUser, C>>(
+        sql`SELECT ${userTable.columns(columns)}
             FROM ${userTable.name}
             ${where(filters, false)}
             LIMIT 1`,
       ).then(dbUtil.firstRow);
     },
 
-    findMaybeOne(filters: FilterUser, conn = app.database.query) {
-      return conn<PublicUser>(
-        sql`SELECT ${userTable.columns()}
+    findMaybeOne<C extends UserColumn = UserColumn>(filters: FilterUser, columns?: C | C[], conn = app.database.query) {
+      return conn<Pick<PublicUser, C>>(
+        sql`SELECT ${userTable.columns(columns)}
             FROM ${userTable.name}
             ${where(filters, false)}
             LIMIT 1`,
       ).then(dbUtil.maybeFirstRow);
     },
 
-    list(
+    list<C extends UserColumn = UserColumn>(
       {
         orderBy = 'id',
         orderDirection = dbUtil.OrderDirection.ASCENDING,
@@ -56,10 +56,11 @@ export function userRepository(app: FastifyInstance) {
         offset = 0,
         ...filters
       }: ListUser & FilterUser,
+      columns?: C | C[],
       conn = app.database.query,
     ) {
-      return conn<PublicUser & { totalRows: number }>(
-        sql`SELECT ${userTable.columns()}, COUNT(*) OVER AS "totalRows"
+      return conn<Pick<PublicUser, C> & { totalRows: number }>(
+        sql`SELECT ${userTable.columns(columns)}, COUNT(*) OVER AS "totalRows"
             FROM ${userTable.name}
             ${where(filters, false)}
             ORDER BY ${userTable.column(orderBy)} ${dbUtil.orderDirection[orderDirection]}
@@ -68,3 +69,5 @@ export function userRepository(app: FastifyInstance) {
     },
   };
 }
+
+export type UserRepository = ReturnType<typeof userRepository>;

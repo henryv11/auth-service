@@ -15,3 +15,5 @@ export function authRepository(app: FastifyInstance) {
     // TODO: implement repository
   };
 }
+
+export type AuthRepository = ReturnType<typeof authRepository>;
