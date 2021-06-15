@@ -3,14 +3,14 @@ import { FastifyInstance } from 'fastify';
 import { dbUtil } from '../../lib';
 import { userRole, FilterUserRole, CreateUserRole, UserRole, ListUserRole } from './schemas';
 
-const where = dbUtil.whereBuilder<FilterUserRole>({
+const where = dbUtil.where<FilterUserRole>({
   userId: (userId, where) => where.and`user_id = ${userId}`,
   roleId: (roleId, where) => where.and`role_id = ${roleId}`,
 });
 
-export const userRoleTableInfo = dbUtil.getTableInfo('user_role', Object.keys(userRole.properties));
+export const userRoleTableInfo = dbUtil.table('user_role', Object.keys(userRole.properties));
 
-const { table, columns, getColumn } = userRoleTableInfo;
+const { name: table, allColumns: columns, column: getColumn } = userRoleTableInfo;
 
 export function userRoleRepository(app: FastifyInstance) {
   return {
@@ -39,7 +39,7 @@ export function userRoleRepository(app: FastifyInstance) {
       return query<UserRole & { totalRows: number }>(
         sql`SELECT ${columns}, COUNT(*) OVER AS "totalRows"
             FROM ${table}
-            ${where(filters)}
+            ${where(filters, false)}
             ORDER BY ${getColumn(orderBy)} ${dbUtil.orderDirection[orderDirection]}
             LIMIT ${limit} OFFSET ${offset}`,
       ).then(dbUtil.allRows);

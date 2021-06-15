@@ -4,11 +4,11 @@ import { FastifyInstance } from 'fastify';
 import { dbUtil } from '../../lib';
 import { auth, FilterAuth } from './schemas';
 
-const where = dbUtil.whereBuilder<FilterAuth>({
+const where = dbUtil.where<FilterAuth>({
   // TODO: implement filters
 });
 
-const { table, columns, columnAlias } = dbUtil.getTableInfo('auth', Object.keys(auth.properties));
+const { name: table, allColumns: columns, columnAlias } = dbUtil.table('auth', Object.keys(auth.properties));
 
 export function authRepository(app: FastifyInstance) {
   return {

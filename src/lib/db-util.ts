@@ -1,10 +1,8 @@
-import { Connection } from '@heviir/fastify-pg';
 import errors from '@heviir/http-errors';
 import sql, { WhereSqlObj } from '@heviir/pg-template-string';
-import { FastifyInstance } from 'fastify';
 import { QueryResult } from 'pg';
 
-export function whereBuilder<W extends Record<string, W[keyof W]>>(
+export function where<W extends Record<string, W[keyof W]>>(
   whereSchema: {
     [Key in keyof W]: (value: Exclude<W[Key], undefined>, where: WhereSqlObj) => void;
   },
@@ -68,14 +66,6 @@ export function columnAliasBuilder<T extends Record<string, string>>(aliasMap: T
   return (column: string): string => aliasMap[column] ?? column;
 }
 
-function invert<T extends Record<string, string>>(obj: T) {
-  const inverted: Record<string, string> = {};
-  for (const [key, value] of Object.entries(obj)) {
-    inverted[value] = key;
-  }
-  return <Record<T[keyof T], keyof T>>inverted;
-}
-
 export function aliasColumns(columns: string[], columnMask: (col: string) => string) {
   return columns.map<string | [string, string]>(column => {
     const mask = columnMask(column);
@@ -100,13 +90,30 @@ function toCamelCase(str: string) {
   });
 }
 
-export function getTableInfo(table: string, columns: string[], getColumnAlias = toCamelCase) {
-  const columnAlias = columnAliasBuilder(getAliasMap(columns, getColumnAlias));
+function invert<T extends Record<string, string>>(obj: T) {
+  const inverted: Record<string, string> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    inverted[value] = key;
+  }
+  return <Record<T[keyof T], keyof T>>inverted;
+}
+
+export function table<C extends string>(rawTable: string, rawColumns: C[], getColumnAlias = toCamelCase) {
+  const columnAlias = columnAliasBuilder(getAliasMap(rawColumns, getColumnAlias));
+  const allColumns = sql.columns(aliasColumns(rawColumns, columnAlias));
+
   return {
-    table: sql.identifier(table),
-    columns: sql.columns(aliasColumns(columns, columnAlias)),
+    name: sql.identifier(rawTable),
+    allColumns,
     columnAlias,
-    getColumn: (rawColumn: string) => sql.identifier(columnAlias(rawColumn)),
+    columns(rawColumns: C[] | C | '*' = '*') {
+      if (rawColumns === '*') {
+        return allColumns;
+      }
+      rawColumns = Array.isArray(rawColumns) ? rawColumns : [rawColumns];
+      return sql.columns(aliasColumns(rawColumns, columnAlias));
+    },
+    column: (rawColumn: C) => sql.identifier(columnAlias(rawColumn)),
   };
 }
 
@@ -117,9 +124,9 @@ export const dbUtil = {
   columnAliasBuilder,
   firstRow,
   getAliasMap,
-  getTableInfo,
+  table,
   maybeFirstRow,
   orderDirection,
   rowCount,
-  whereBuilder,
+  where,
 };

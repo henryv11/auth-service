@@ -3,13 +3,13 @@ import { FastifyInstance } from 'fastify';
 import { dbUtil } from '../../lib';
 import { CreateUser, FilterUser, ListUser, PublicUser, publicUser, UpdateUser } from './schemas';
 
-const where = dbUtil.whereBuilder<FilterUser>({
+const where = dbUtil.where<FilterUser>({
   id: (id, where) => where.and`id = ${id}`,
   username: (username, where) => where.and`username = ${username}`,
   password: (password, where) => where.and`password = ${password}`,
 });
 
-const { table, columns, columnAlias } = dbUtil.getTableInfo('app_user', Object.keys(publicUser.properties));
+const { name: table, allColumns: columns, columnAlias } = dbUtil.table('app_user', Object.keys(publicUser.properties));
 
 export function userRepository(app: FastifyInstance) {
   return {

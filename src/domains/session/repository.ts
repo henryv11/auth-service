@@ -1,32 +1,30 @@
 import sql from '@heviir/pg-template-string';
 import { FastifyInstance } from 'fastify';
 import { dbUtil } from '../../lib';
-import { session, FilterSession, CreateSession, Session, UpdateSession } from './schemas';
+import { FilterSession, CreateSession, Session, UpdateSession, columns, Columns } from './schemas';
 
-const where = dbUtil.whereBuilder<FilterSession>({
+const where = dbUtil.where<FilterSession>({
   id: (id, where) => where.and`id = ${id}`,
   userId: (userId, where) => where.and`user_id = ${userId}`,
   endedAt: (endedAt, where) => where.and`ended_at = ${endedAt}`,
 });
 
-export const sessionTableInfo = dbUtil.getTableInfo('session', Object.keys(session.properties));
-
-const { table, columns } = sessionTableInfo;
+export const sessionTable = dbUtil.table('session', columns);
 
 export function sessionRepository(app: FastifyInstance) {
   return {
-    createOne(session: CreateSession, conn = app.database.query) {
+    createOne(session: CreateSession, columns?: Columns | Columns[number], conn = app.database.query) {
       return conn<Session>(
-        sql`INSERT INTO ${table} (token, user_id)
+        sql`INSERT INTO ${sessionTable.name} (token, user_id)
             ${sql.values([[session.token, session.userId]])}
-            RETURNING ${columns}`,
+            RETURNING ${sessionTable.columns(columns)}`,
       ).then(dbUtil.firstRow);
     },
 
     findOne(filters: FilterSession, conn = app.database.query) {
       return conn<Session>(
-        sql`SELECT ${columns}
-            FROM ${table}
+        sql`SELECT ${sessionTable.allColumns}
+            FROM ${sessionTable.name}
             ${where(filters, false)}
             LIMIT 1`,
       ).then(dbUtil.firstRow);
@@ -34,8 +32,8 @@ export function sessionRepository(app: FastifyInstance) {
 
     findMaybeOne(filters: FilterSession, conn = app.database.query) {
       return conn<Session>(
-        sql`SELECT ${columns}
-            FROM ${table}
+        sql`SELECT ${sessionTable.allColumns}
+            FROM ${sessionTable.name}
             ${where(filters, false)}
             LIMIT 1`,
       ).then(dbUtil.maybeFirstRow);
@@ -43,23 +41,23 @@ export function sessionRepository(app: FastifyInstance) {
 
     update(update: UpdateSession, filters: FilterSession, conn = app.database.query) {
       return conn<Session>(
-        sql`UPDATE ${table}
+        sql`UPDATE ${sessionTable.name}
           ${sql.set({
             endedAt: update.endedAt,
           })}
           ${where(filters)}
-          RETURNING ${columns}`,
+          RETURNING ${sessionTable.allColumns}`,
       ).then(dbUtil.allRows);
     },
 
     updateOne(update: UpdateSession, filters: FilterSession, conn = app.database.query) {
       return conn<Session>(
-        sql`UPDATE ${table}
+        sql`UPDATE ${sessionTable.name}
           ${sql.set({
             endedAt: update.endedAt,
           })}
           ${where(filters)}
-          RETURNING ${columns}`,
+          RETURNING ${sessionTable.allColumns}`,
       ).then(dbUtil.firstRow);
     },
   };

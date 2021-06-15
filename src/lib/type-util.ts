@@ -15,10 +15,14 @@ export function ListControl<T extends string>(orderByKeys: T[]) {
 }
 
 export function Keys<T extends TObject<TProperties>>(schema: T) {
-  return <(keyof T['properties'])[]>Object.keys(schema.properties);
+  return <Exclude<keyof T['properties'], number | symbol>[]>Object.keys(schema.properties);
 }
 
 export const typeUtil = {
   ListControl,
   Keys,
 };
+
+function ListControlV2<T extends TObject<TProperties>>(obj: T) {
+  return ListControl(Keys(obj));
+}

@@ -5,17 +5,17 @@ import { dbUtil } from '../../lib';
 import { Session } from '../session/schemas';
 import { CreateResource, FilterResource, resource } from './schemas';
 
-const where = dbUtil.whereBuilder<FilterResource>({});
+const where = dbUtil.where<FilterResource>({});
 
-const { table, columns, columnAlias } = dbUtil.getTableInfo('resource', Object.keys(resource.properties));
+export const resourceTable = dbUtil.table('resource', Object.keys(resource.properties));
 
 export function resourceRepository(app: FastifyInstance) {
   return {
     createOne(resource: CreateResource, conn = app.database.query) {
       return conn<Session>(
-        sql`INSERT INTO ${table} (name)
+        sql`INSERT INTO ${resourceTable.name} (name)
             ${sql.values([[resource.name]])}
-            RETURNING ${columns}`,
+            RETURNING ${resourceTable.allColumns}`,
       ).then(dbUtil.firstRow);
     },
   };
