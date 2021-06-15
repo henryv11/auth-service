@@ -10,6 +10,10 @@ export const userRole = Type.Object({
   updatedAt: Type.String({ format: 'date-time' }),
 });
 
+export const userRoleColumns = typeUtil.Keys(userRole);
+
+export type UserRoleColumns = typeof userRoleColumns;
+
 export const userRolePrimaryKey = Type.Pick(userRole, ['userId', 'roleId']);
 
 export type UserRolePrimaryKey = Static<typeof userRolePrimaryKey>;
@@ -28,6 +32,6 @@ export const updateUserRole = Type.Partial(Type.Pick(userRole, []));
 
 export type UpdateUserRole = Static<typeof updateUserRole>;
 
-export const listUserRole = Type.Intersect([filterUserRole, typeUtil.ListControl(typeUtil.Keys(userRole))]);
+export const listUserRole = Type.Intersect([filterUserRole, typeUtil.ListControl(userRoleColumns)]);
 
 export type ListUserRole = Static<typeof listUserRole>;

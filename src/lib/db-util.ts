@@ -1,5 +1,5 @@
 import errors from '@heviir/http-errors';
-import sql, { WhereSqlObj } from '@heviir/pg-template-string';
+import sql, { ValidArg, WhereSqlObj } from '@heviir/pg-template-string';
 import { QueryResult } from 'pg';
 
 export function where<W extends Record<string, W[keyof W]>>(
@@ -61,12 +61,37 @@ export const orderDirection = {
   [OrderDirection.DESCENDING]: sql`DESC`,
 };
 
-export function columnAliasBuilder<T extends Record<string, string>>(aliasMap: T) {
+export function table<C extends string>(rawTable: string, rawColumns: C[], getColumnAlias = toCamelCase) {
+  const columnAlias = columnAliasBuilder(getAliasMap(rawColumns, getColumnAlias));
+  const allColumns = sql.columns(aliasColumns(rawColumns, columnAlias));
+
+  return {
+    name: sql.identifier(rawTable),
+    allColumns,
+    columnAlias,
+    columns(rawColumns: C[] | C | '*' = '*') {
+      if (rawColumns === '*') {
+        return allColumns;
+      }
+      return sql.columns(aliasColumns(Array.isArray(rawColumns) ? rawColumns : [rawColumns], columnAlias));
+    },
+    column: (rawColumn: C) => sql.identifier(columnAlias(rawColumn)),
+    set(values: Partial<Record<C, ValidArg>>) {
+      const aliasedValues: Partial<Record<string, ValidArg>> = {};
+      for (const key of Object.keys(values)) {
+        aliasedValues[columnAlias(key)] = values[<C>key];
+      }
+      return sql.set(aliasedValues);
+    },
+  };
+}
+
+function columnAliasBuilder<T extends Record<string, string>>(aliasMap: T) {
   Object.assign(aliasMap, invert(aliasMap));
   return (column: string): string => aliasMap[column] ?? column;
 }
 
-export function aliasColumns(columns: string[], columnMask: (col: string) => string) {
+function aliasColumns(columns: string[], columnMask: (col: string) => string) {
   return columns.map<string | [string, string]>(column => {
     const mask = columnMask(column);
     if (mask === column) {
@@ -76,7 +101,7 @@ export function aliasColumns(columns: string[], columnMask: (col: string) => str
   });
 }
 
-export function getAliasMap<K extends string, A>(keys: K[], getAlias: (key: K) => A) {
+function getAliasMap<K extends string, A>(keys: K[], getAlias: (key: K) => A) {
   return keys.reduce((aliasMap, key) => {
     aliasMap[key] = getAlias(key);
     return aliasMap;
@@ -98,35 +123,13 @@ function invert<T extends Record<string, string>>(obj: T) {
   return <Record<T[keyof T], keyof T>>inverted;
 }
 
-export function table<C extends string>(rawTable: string, rawColumns: C[], getColumnAlias = toCamelCase) {
-  const columnAlias = columnAliasBuilder(getAliasMap(rawColumns, getColumnAlias));
-  const allColumns = sql.columns(aliasColumns(rawColumns, columnAlias));
-
-  return {
-    name: sql.identifier(rawTable),
-    allColumns,
-    columnAlias,
-    columns(rawColumns: C[] | C | '*' = '*') {
-      if (rawColumns === '*') {
-        return allColumns;
-      }
-      rawColumns = Array.isArray(rawColumns) ? rawColumns : [rawColumns];
-      return sql.columns(aliasColumns(rawColumns, columnAlias));
-    },
-    column: (rawColumn: C) => sql.identifier(columnAlias(rawColumn)),
-  };
-}
-
 export const dbUtil = {
   OrderDirection,
-  aliasColumns,
   allRows,
-  columnAliasBuilder,
   firstRow,
-  getAliasMap,
-  table,
   maybeFirstRow,
   orderDirection,
   rowCount,
+  table,
   where,
 };

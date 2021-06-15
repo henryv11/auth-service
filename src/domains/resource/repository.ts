@@ -3,11 +3,11 @@ import sql from '@heviir/pg-template-string';
 import { FastifyInstance } from 'fastify';
 import { dbUtil } from '../../lib';
 import { Session } from '../session/schemas';
-import { CreateResource, FilterResource, resource } from './schemas';
+import { CreateResource, FilterResource, resourceColumns } from './schemas';
 
 const where = dbUtil.where<FilterResource>({});
 
-export const resourceTable = dbUtil.table('resource', Object.keys(resource.properties));
+export const resourceTable = dbUtil.table('resource', resourceColumns);
 
 export function resourceRepository(app: FastifyInstance) {
   return {
@@ -15,7 +15,7 @@ export function resourceRepository(app: FastifyInstance) {
       return conn<Session>(
         sql`INSERT INTO ${resourceTable.name} (name)
             ${sql.values([[resource.name]])}
-            RETURNING ${resourceTable.allColumns}`,
+            RETURNING ${resourceTable.columns()}`,
       ).then(dbUtil.firstRow);
     },
   };

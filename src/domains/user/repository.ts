@@ -1,7 +1,7 @@
 import sql from '@heviir/pg-template-string';
 import { FastifyInstance } from 'fastify';
 import { dbUtil } from '../../lib';
-import { CreateUser, FilterUser, ListUser, PublicUser, publicUser, UpdateUser } from './schemas';
+import { CreateUser, FilterUser, ListUser, PublicUser, publicUser, UpdateUser, userColumns } from './schemas';
 
 const where = dbUtil.where<FilterUser>({
   id: (id, where) => where.and`id = ${id}`,
@@ -9,31 +9,31 @@ const where = dbUtil.where<FilterUser>({
   password: (password, where) => where.and`password = ${password}`,
 });
 
-const { name: table, allColumns: columns, columnAlias } = dbUtil.table('app_user', Object.keys(publicUser.properties));
+export const userTable = dbUtil.table('app_user', userColumns);
 
 export function userRepository(app: FastifyInstance) {
   return {
     createOne(user: CreateUser, conn = app.database.query) {
       return conn<PublicUser>(
-        sql`INSERT INTO ${table} (username, password)
+        sql`INSERT INTO ${userTable.name} (username, password)
             ${sql.values([[user.username, user.password]])}
-            RETURNING ${columns}`,
+            RETURNING ${userTable.columns()}`,
       ).then(dbUtil.firstRow);
     },
 
     updateOne(update: UpdateUser, filters: FilterUser, conn = app.database.query) {
       return conn<PublicUser>(
-        sql`UPDATE ${table}
-            ${sql.set({ username: update.username, password: update.password })}
+        sql`UPDATE ${userTable.name}
+            ${userTable.set(update)}
             ${where(filters)}
-            RETURNING ${columns}`,
+            RETURNING ${userTable.columns()}`,
       ).then(dbUtil.firstRow);
     },
 
     findOne(filters: FilterUser, conn = app.database.query) {
       return conn<PublicUser>(
-        sql`SELECT ${columns}
-            FROM ${table}
+        sql`SELECT ${userTable.columns()}
+            FROM ${userTable.name}
             ${where(filters, false)}
             LIMIT 1`,
       ).then(dbUtil.firstRow);
@@ -41,8 +41,8 @@ export function userRepository(app: FastifyInstance) {
 
     findMaybeOne(filters: FilterUser, conn = app.database.query) {
       return conn<PublicUser>(
-        sql`SELECT ${columns}
-            FROM ${table}
+        sql`SELECT ${userTable.columns()}
+            FROM ${userTable.name}
             ${where(filters, false)}
             LIMIT 1`,
       ).then(dbUtil.maybeFirstRow);
@@ -59,10 +59,10 @@ export function userRepository(app: FastifyInstance) {
       conn = app.database.query,
     ) {
       return conn<PublicUser & { totalRows: number }>(
-        sql`SELECT ${columns}, COUNT(*) OVER AS "totalRows"
-            FROM ${table}
+        sql`SELECT ${userTable.columns()}, COUNT(*) OVER AS "totalRows"
+            FROM ${userTable.name}
             ${where(filters, false)}
-            ORDER BY ${sql.identifier(columnAlias(orderBy))} ${dbUtil.orderDirection[orderDirection]}
+            ORDER BY ${userTable.column(orderBy)} ${dbUtil.orderDirection[orderDirection]}
             LIMIT ${limit} OFFSET ${offset}`,
       ).then(dbUtil.allRows);
     },

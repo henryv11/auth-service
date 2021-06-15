@@ -28,11 +28,11 @@ export const updateSession = Type.Partial(Type.Pick(session, ['endedAt']));
 
 export type UpdateSession = Static<typeof updateSession>;
 
-export const columns = typeUtil.Keys(session);
+export const sessionColumns = typeUtil.Keys(session);
 
-export type Columns = typeof columns;
+export type SessionColumns = typeof sessionColumns;
 
-export const listSession = Type.Intersect([filterSession, typeUtil.ListControl(columns)]);
+export const listSession = Type.Intersect([filterSession, typeUtil.ListControl(sessionColumns)]);
 
 export type ListSession = Static<typeof listSession>;
 

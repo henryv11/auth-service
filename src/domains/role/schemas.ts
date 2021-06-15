@@ -11,6 +11,10 @@ export const role = Type.Object({
 
 export type Role = Static<typeof role>;
 
+export const roleColumns = typeUtil.Keys(role);
+
+export const RoleColumns = typeof roleColumns;
+
 export const createRole = Type.Pick(role, ['id', 'name']);
 
 export type CreateRole = Static<typeof createRole>;
@@ -32,6 +36,6 @@ export const updateRole = Type.Partial(
 
 export type UpdateRole = Static<typeof updateRole>;
 
-export const listRole = Type.Intersect([filterRole, typeUtil.ListControl(typeUtil.Keys(role))]);
+export const listRole = Type.Intersect([filterRole, typeUtil.ListControl(roleColumns)]);
 
 export type ListRole = Static<typeof listRole>;

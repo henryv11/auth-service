@@ -5,6 +5,8 @@ import { userService } from './service';
 
 export * as userSchemas from './schemas';
 
+export { userTable } from './repository';
+
 export function userDomain(app: FastifyInstance) {
   const repository = userRepository(app);
   const service = userService(app, repository);

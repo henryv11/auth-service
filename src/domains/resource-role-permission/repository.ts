@@ -2,16 +2,13 @@
 import sql from '@heviir/pg-template-string';
 import { FastifyInstance } from 'fastify';
 import { dbUtil } from '../../lib';
-import { resourceRolePermission, FilterResourceRolePermission } from './schemas';
+import { FilterResourceRolePermission, resourceRolePermissionColumns } from './schemas';
 
-const where = dbUtil.whereBuilder<FilterResourceRolePermission>({
+const where = dbUtil.where<FilterResourceRolePermission>({
   // TODO: implement filters for "resource_role_permission" table
 });
 
-const { table, columns, columnAlias } = dbUtil.getTableInfo(
-  'resource_role_permission',
-  Object.keys(resourceRolePermission.properties),
-);
+export const resourceRolePermissionTable = dbUtil.table('resource_role_permission', resourceRolePermissionColumns);
 
 export function resourceRolePermissionRepository(app: FastifyInstance) {
   return {

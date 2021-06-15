@@ -2,7 +2,7 @@ import sql from '@heviir/pg-template-string';
 import { FastifyInstance } from 'fastify';
 import { dbUtil } from '../../lib';
 import { userRoleTableInfo } from '../user-role';
-import { CreateRole, FilterRole, ListRole, role, Role } from './schemas';
+import { CreateRole, FilterRole, ListRole, Role, roleColumns } from './schemas';
 
 const where = dbUtil.where<FilterRole>({
   id: (id, where) => where.and`id = ${id}`,
@@ -16,17 +16,15 @@ const where = dbUtil.where<FilterRole>({
     )`,
 });
 
-export const roleTableInfo = dbUtil.table('role', Object.keys(role.properties));
-
-const { name: table, allColumns: columns, column } = roleTableInfo;
+export const roleTable = dbUtil.table('role', roleColumns);
 
 export function roleRepository(app: FastifyInstance) {
   return {
     createOne(role: CreateRole, query = app.database.query) {
       return query<Role>(
-        sql`INSERT INTO ${table} (name)
+        sql`INSERT INTO ${roleTable.name} (name)
             ${sql.values([[role.name]])}
-            RETURNING ${columns}`,
+            RETURNING ${roleTable.columns()}`,
       ).then(dbUtil.firstRow);
     },
 
@@ -41,10 +39,10 @@ export function roleRepository(app: FastifyInstance) {
       query = app.database.query,
     ) {
       return query<Role & { totalRows: number }>(
-        sql`SELECT ${columns}, COUNT(*) OVER AS "totalRows"
-            FROM ${table}
+        sql`SELECT ${roleTable.columns()}, COUNT(*) OVER AS "totalRows"
+            FROM ${roleTable.name}
             ${where(filters)}
-            ORDER BY ${column(orderBy)} ${dbUtil.orderDirection[orderDirection]}
+            ORDER BY ${roleTable.column(orderBy)} ${dbUtil.orderDirection[orderDirection]}
             LIMIT ${limit} OFFSET ${offset}`,
       ).then(dbUtil.allRows);
     },

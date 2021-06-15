@@ -10,6 +10,10 @@ export const resource = Type.Object({
 
 export type Resource = Static<typeof resource>;
 
+export const resourceColumns = typeUtil.Keys(resource);
+
+export const ResourceColumns = typeof resourceColumns;
+
 export const createResource = Type.Pick(resource, ['name']);
 
 export type CreateResource = Static<typeof createResource>;

@@ -5,7 +5,7 @@ import { roleService } from './service';
 
 export * as roleSchemas from './schemas';
 
-export { roleTableInfo } from './repository';
+export { roleTable as roleTableInfo } from './repository';
 
 export function roleDomain(app: FastifyInstance) {
   const repository = roleRepository(app);

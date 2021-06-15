@@ -44,6 +44,10 @@ export const ${name} = Type.Object({
 
 export type ${nameCapitalized} = Static<typeof ${name}>;
 
+export const ${name}Columns = typeUtil.Keys(${name});
+
+export type ${nameCapitalized}Columns = typeof ${name}Columns;
+
 export const create${nameCapitalized} = Type.Pick(${name}, [
   // TODO: pick properties for creating entries in "${nameSnakeCase}" table
 ]);
@@ -62,7 +66,7 @@ export const update${nameCapitalized} = Type.Partial(Type.Pick(${name}, [
 
 export type Update${nameCapitalized} = Static<typeof update${nameCapitalized}>;
 
-export const list${nameCapitalized} = Type.Intersect([filter${nameCapitalized}, typeUtil.ListControl(typeUtil.Keys(${name}))]);
+export const list${nameCapitalized} = Type.Intersect([filter${nameCapitalized}, typeUtil.ListControl(${name}Columns)]);
 
 export type List${nameCapitalized} = Static<typeof list${nameCapitalized}>;
 `;
@@ -87,13 +91,13 @@ const repository = `
 import sql from '@heviir/pg-template-string';
 import { FastifyInstance } from 'fastify';
 import { dbUtil } from '../../lib';
-import { ${name}, Filter${nameCapitalized} } from './schemas';
+import { Filter${nameCapitalized}, ${name}Columns } from './schemas';
 
 const where = dbUtil.where<Filter${nameCapitalized}>({
   // TODO: implement filters for "${nameSnakeCase}" table
 });
 
-export const ${name}Table = dbUtil.table('${nameSnakeCase}', Object.keys(${name}.properties));
+export const ${name}Table = dbUtil.table('${nameSnakeCase}', ${name}Columns);
 
 export function ${name}Repository(app: FastifyInstance) {
   return {
@@ -123,7 +127,7 @@ import { ${name}Service } from './service';
 
 export * as ${name}Schemas from './schemas';
 
-export { ${name}TableInfo } from './repository';
+export { ${name}Table } from './repository';
 
 export function ${name}Domain(app: FastifyInstance) {
   const repository = ${name}Repository(app);

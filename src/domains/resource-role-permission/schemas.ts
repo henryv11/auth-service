@@ -16,6 +16,10 @@ export const resourceRolePermission = Type.Object({
   permission: Type.Enum(Permission),
 });
 
+export const resourceRolePermissionColumns = typeUtil.Keys(resourceRolePermission);
+
+export type ResourceRolePermissionColumns = typeof resourceRolePermissionColumns;
+
 export type ResourceRolePermission = Static<typeof resourceRolePermission>;
 
 export const createResourceRolePermission = resourceRolePermission;

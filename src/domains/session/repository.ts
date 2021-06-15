@@ -1,7 +1,7 @@
 import sql from '@heviir/pg-template-string';
 import { FastifyInstance } from 'fastify';
 import { dbUtil } from '../../lib';
-import { FilterSession, CreateSession, Session, UpdateSession, columns, Columns } from './schemas';
+import { FilterSession, CreateSession, Session, UpdateSession, sessionColumns, SessionColumns } from './schemas';
 
 const where = dbUtil.where<FilterSession>({
   id: (id, where) => where.and`id = ${id}`,
@@ -9,11 +9,11 @@ const where = dbUtil.where<FilterSession>({
   endedAt: (endedAt, where) => where.and`ended_at = ${endedAt}`,
 });
 
-export const sessionTable = dbUtil.table('session', columns);
+export const sessionTable = dbUtil.table('session', sessionColumns);
 
 export function sessionRepository(app: FastifyInstance) {
   return {
-    createOne(session: CreateSession, columns?: Columns | Columns[number], conn = app.database.query) {
+    createOne(session: CreateSession, columns?: SessionColumns | SessionColumns[number], conn = app.database.query) {
       return conn<Session>(
         sql`INSERT INTO ${sessionTable.name} (token, user_id)
             ${sql.values([[session.token, session.userId]])}
@@ -42,9 +42,7 @@ export function sessionRepository(app: FastifyInstance) {
     update(update: UpdateSession, filters: FilterSession, conn = app.database.query) {
       return conn<Session>(
         sql`UPDATE ${sessionTable.name}
-          ${sql.set({
-            endedAt: update.endedAt,
-          })}
+          ${sessionTable.set(update)}
           ${where(filters)}
           RETURNING ${sessionTable.allColumns}`,
       ).then(dbUtil.allRows);

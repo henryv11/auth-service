@@ -1,5 +1,5 @@
 import { Type, Static } from '@sinclair/typebox';
-import { Keys, ListControl } from '../../lib';
+import { Keys, ListControl, typeUtil } from '../../lib';
 
 export const user = Type.Object({
   id: Type.Number(),
@@ -12,6 +12,10 @@ export const user = Type.Object({
 export const publicUser = Type.Omit(user, ['password']);
 
 export type PublicUser = Static<typeof publicUser>;
+
+export const userColumns = typeUtil.Keys(publicUser);
+
+export type UserColumns = typeof userColumns;
 
 export type User = Static<typeof user>;
 
@@ -27,6 +31,6 @@ export const filterUser = Type.Partial(Type.Pick(user, ['id', 'username', 'passw
 
 export type FilterUser = Static<typeof filterUser>;
 
-export const listUser = ListControl(Keys(user));
+export const listUser = ListControl(userColumns);
 
 export type ListUser = Static<typeof listUser>;
