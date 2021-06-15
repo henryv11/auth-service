@@ -8,7 +8,7 @@ const where = dbUtil.where<FilterAuth>({
   // TODO: implement filters
 });
 
-const { name: table, allColumns: columns, columnAlias } = dbUtil.table('auth', Object.keys(auth.properties));
+const authTable = dbUtil.table('auth', Object.keys(auth.properties));
 
 export function authRepository(app: FastifyInstance) {
   return {

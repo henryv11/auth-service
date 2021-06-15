@@ -5,7 +5,7 @@ import { sessionService } from './service';
 
 export * as sessionSchemas from './schemas';
 
-export { sessionTableInfo } from './repository';
+export { sessionTable } from './repository';
 
 export function sessionDomain(app: FastifyInstance) {
   const repository = sessionRepository(app);

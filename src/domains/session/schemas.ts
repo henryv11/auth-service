@@ -30,7 +30,7 @@ export type UpdateSession = Static<typeof updateSession>;
 
 export const sessionColumns = typeUtil.Keys(session);
 
-export type SessionColumns = typeof sessionColumns;
+export type SessionColumn = typeof sessionColumns[number];
 
 export const listSession = Type.Intersect([filterSession, typeUtil.ListControl(sessionColumns)]);
 

@@ -12,7 +12,7 @@ export type Resource = Static<typeof resource>;
 
 export const resourceColumns = typeUtil.Keys(resource);
 
-export const ResourceColumns = typeof resourceColumns;
+export type ResourceColumn = typeof resourceColumns[number];
 
 export const createResource = Type.Pick(resource, ['name']);
 
@@ -26,6 +26,6 @@ export const updateResource = Type.Partial(Type.Pick(resource, []));
 
 export type UpdateResource = Static<typeof updateResource>;
 
-export const listResource = Type.Intersect([filterResource, typeUtil.ListControl(typeUtil.Keys(resource))]);
+export const listResource = Type.Intersect([filterResource, typeUtil.ListControl(resourceColumns)]);
 
 export type ListResource = Static<typeof listResource>;
